@@ -1,0 +1,166 @@
+// Anclas de Identidad: objetos que sostienen quién eres frente a la homogeneización.
+
+import type { ItemDef } from '../types/content'
+import type { ItemId, Rarity } from '../types/game'
+import { addStatus, admin, auto, energia, removeStatus } from './dsl'
+
+export const RARITY_LABEL: Record<Rarity, string> = {
+  comun: 'Común',
+  raro: 'Raro',
+  epico: 'Épico',
+  singular: 'Singular',
+}
+
+const frecuencia = (autoDelta: number, extra: ItemDef['onUse'] = []): ItemDef['onUse'] => [
+  removeStatus('ruidoInstitucional'),
+  auto(autoDelta),
+  ...extra,
+]
+
+const decant = (extra: ItemDef['onUse'] = []): ItemDef['onUse'] => [
+  removeStatus('ansiedad'),
+  addStatus('sentidosAbiertos', 4),
+  ...extra,
+]
+
+export const ITEMS: Record<ItemId, ItemDef> = {
+  freq_reverb: {
+    id: 'freq_reverb',
+    name: 'Frecuencia: Muro de Reverb',
+    rarity: 'comun',
+    category: 'frecuencia',
+    kind: 'consumible',
+    effect: 'Limpia Ruido Institucional · Automatismo −12',
+    flavor: 'Guitarras saturadas hasta que el mundo se vuelve textura. Nadie te puede pedir nada a través de este muro.',
+    onUse: frecuencia(-12),
+  },
+  freq_postpunk: {
+    id: 'freq_postpunk',
+    name: 'Frecuencia: Bajo Post-Punk en Bucle',
+    rarity: 'comun',
+    category: 'frecuencia',
+    kind: 'consumible',
+    effect: 'Limpia Ruido Institucional · Automatismo −12',
+    flavor: 'Una línea de bajo que se repite como un pensamiento obsesivo, pero esta vez el pensamiento es tuyo.',
+    onUse: frecuencia(-12),
+  },
+  freq_demo: {
+    id: 'freq_demo',
+    name: 'Frecuencia: Demo Grabado en un Living',
+    rarity: 'raro',
+    category: 'frecuencia',
+    kind: 'consumible',
+    effect: 'Limpia Ruido Institucional · Automatismo −18 · Energía +8',
+    flavor: 'Se escucha el refrigerador de fondo y alguien que se ríe al final. Imperfecto, humano, imposible de estandarizar.',
+    onUse: frecuencia(-18, [energia(8)]),
+  },
+  freq_ladob: {
+    id: 'freq_ladob',
+    name: 'Frecuencia: Lado B en Vivo, Público Desafinado',
+    rarity: 'raro',
+    category: 'frecuencia',
+    kind: 'consumible',
+    effect: 'Limpia Ruido Institucional · Automatismo −15 · Permisos +5',
+    flavor: 'Cien personas cantando mal la misma canción. Pertenecer sin uniformarse.',
+    onUse: frecuencia(-15, [admin(5)]),
+  },
+  reloj_automatico: {
+    id: 'reloj_automatico',
+    name: 'Reloj Mecánico Automático',
+    rarity: 'epico',
+    category: 'reloj',
+    kind: 'equipable',
+    slot: 'muneca',
+    unique: true,
+    effect: 'En escenas con presión de tiempo: automatismo ganado ×0,5 y costos de energía −5',
+    flavor: 'Se da cuerda con el movimiento de tu propia muñeca. No depende de ninguna batería ajena: marca tu hora, no la del sistema.',
+  },
+  decant_vetiver: {
+    id: 'decant_vetiver',
+    name: 'Decant: Vetiver y Tierra Mojada',
+    rarity: 'raro',
+    category: 'perfume',
+    kind: 'consumible',
+    effect: 'Elimina Ansiedad · Sentidos Abiertos (4 decisiones)',
+    flavor: 'Huele a raíz. A algo que estuvo bajo tierra mucho tiempo y sigue vivo.',
+    onUse: decant(),
+  },
+  decant_higo: {
+    id: 'decant_higo',
+    name: 'Decant: Higo, Leche y Madera',
+    rarity: 'raro',
+    category: 'perfume',
+    kind: 'consumible',
+    effect: 'Elimina Ansiedad · Sentidos Abiertos (4 decisiones) · Energía +5',
+    flavor: 'Dulce sin ser infantil. Recuerda una cocina donde alguien te esperaba, aunque no sepas cuál.',
+    onUse: decant([energia(5)]),
+  },
+  decant_incienso: {
+    id: 'decant_incienso',
+    name: 'Decant: Incienso Frío de Iglesia Vacía',
+    rarity: 'raro',
+    category: 'perfume',
+    kind: 'consumible',
+    effect: 'Elimina Ansiedad · Sentidos Abiertos (4 decisiones) · Permisos +5',
+    flavor: 'Silencio con olor. Lo sagrado sin la institución.',
+    onUse: decant([admin(5)]),
+  },
+  anillo_liso: {
+    id: 'anillo_liso',
+    name: 'Anillo de Plata Liso',
+    rarity: 'comun',
+    category: 'joyeria',
+    kind: 'equipable',
+    slot: 'manos',
+    unique: true,
+    burocraciaShield: 2,
+    effect: 'Entornos burocráticos: −2 automatismo ganado por decisión',
+    flavor: 'Lo giras con el pulgar cuando una reunión se alarga. Un recordatorio táctil de que hay un cuerpo debajo del cargo.',
+  },
+  anillo_sello: {
+    id: 'anillo_sello',
+    name: 'Anillo de Sello sin Iniciales',
+    rarity: 'raro',
+    category: 'joyeria',
+    kind: 'equipable',
+    slot: 'manos',
+    unique: true,
+    burocraciaShield: 4,
+    effect: 'Entornos burocráticos: −4 automatismo ganado por decisión',
+    flavor: 'Un sello que no firma nada. La superficie lisa está esperando un nombre que todavía estás escribiendo.',
+  },
+  cadena_plata: {
+    id: 'cadena_plata',
+    name: 'Cadena de Plata Gruesa',
+    rarity: 'raro',
+    category: 'joyeria',
+    kind: 'equipable',
+    slot: 'cuello',
+    unique: true,
+    burocraciaShield: 3,
+    effect: 'Entornos burocráticos: −3 automatismo ganado por decisión',
+    flavor: 'Bajo la camisa institucional, un peso frío que se entibia con tu temperatura. Nadie la ve. Tú sí.',
+  },
+  dibujo_hija: {
+    id: 'dibujo_hija',
+    name: 'Dibujo Doblado en Cuatro',
+    rarity: 'singular',
+    category: 'reliquia',
+    kind: 'reliquia',
+    unique: true,
+    effect: 'Con la Coraza activa frente a tu hija, la frialdad registrada se reduce a la mitad',
+    flavor: 'Dos figuras en una montaña de crayón. Una es más grande. Las dos tienen la boca abierta, como si estuvieran conversando.',
+  },
+  piedra_portezuelo: {
+    id: 'piedra_portezuelo',
+    name: 'Piedra del Portezuelo',
+    rarity: 'singular',
+    category: 'reliquia',
+    kind: 'reliquia',
+    unique: true,
+    effect: 'Ancla final: habilita un argumento propio frente al Algoritmo de Inercia',
+    flavor: 'Gris, con una veta blanca que la atraviesa. No vale nada. Por eso nadie te la puede quitar.',
+  },
+}
+
+export const ALL_ITEM_IDS = Object.keys(ITEMS) as ItemId[]

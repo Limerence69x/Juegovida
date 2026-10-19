@@ -1,0 +1,398 @@
+@import 'tailwindcss';
+
+/* ─── Tokens ──────────────────────────────────────────────────────────────
+   Todos los colores viven en variables: el acto (data-act) y el estado
+   interno (data-mood) los reescriben en tiempo real. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0e1112;
+  --panel: #141819;
+  --panel-2: #1a1f20;
+  --line: #2a3133;
+  --fg: #cfd6d2;
+  --dim: #7f8a86;
+  --accent: #8fb8a4;
+  --accent-ink: #0e1112;
+  --energia: #d8b25a;
+  --admin: #6fc7d8;
+  --coraza: #9aa6b2;
+  --danger: #d9776b;
+  --calidez: #e2a066;
+  --frialdad: #7fa2c4;
+  --confianza: #9ccf8f;
+  --fantasmas: #a88fc4;
+  --comun: #a9b2ad;
+  --raro: #6fb3e0;
+  --epico: #c58ae6;
+  --singular: #f0c45c;
+  --glow: color-mix(in srgb, var(--accent) 35%, transparent);
+  --radius: 0px;
+  --tracking: 0em;
+}
+
+/* Paletas por acto (§5) */
+[data-act='1'] {
+  --bg: #101211;
+  --panel: #161918;
+  --panel-2: #1b1f1d;
+  --line: #2b302e;
+  --fg: #c8cdca;
+  --dim: #7a827e;
+  --accent: #9fb0a7;
+}
+[data-act='2'] {
+  --bg: #12110f;
+  --panel: #191714;
+  --panel-2: #1f1c18;
+  --line: #34302a;
+  --fg: #d6cfc4;
+  --dim: #8a8174;
+  --accent: #d0a85e;
+}
+[data-act='3'] {
+  --bg: #0f1015;
+  --panel: #15161d;
+  --panel-2: #1b1c25;
+  --line: #2c2e3c;
+  --fg: #d0d2e0;
+  --dim: #7f8299;
+  --accent: #8fa6e0;
+}
+[data-act='4'] {
+  --bg: #0d1213;
+  --panel: #12191a;
+  --panel-2: #172021;
+  --line: #273436;
+  --fg: #d4e0da;
+  --dim: #7e928b;
+  --accent: #96c98a;
+}
+[data-act='5'] {
+  --bg: #0c0d0c;
+  --panel: #131512;
+  --panel-2: #191c18;
+  --line: #30352c;
+  --fg: #e3e6dc;
+  --dim: #8b9184;
+  --accent: #e6c75f;
+}
+
+/* Automatismo o Lado Oscuro > 70: monocromo, frío, rígido. */
+[data-mood='frio'] {
+  --bg: #0d1013;
+  --panel: #12161a;
+  --panel-2: #171c21;
+  --line: #2c343c;
+  --fg: #b9c3cc;
+  --dim: #6f7c88;
+  --accent: #8796a3;
+  --energia: #9aa6b0;
+  --admin: #8ea2b3;
+  --calidez: #9aa3ab;
+  --confianza: #93a0aa;
+  --fantasmas: #8a96a2;
+  --comun: #98a3ad;
+  --raro: #8fa2b4;
+  --epico: #9c9fb6;
+  --singular: #b0b4b8;
+  --glow: transparent;
+  --radius: 0px;
+  --tracking: 0.04em;
+}
+
+/* Permisos altos + vínculo cálido: tonos orgánicos. */
+[data-mood='calido'] {
+  --bg: #13100d;
+  --panel: #1a1511;
+  --panel-2: #211b15;
+  --line: #3d3127;
+  --fg: #eee2cf;
+  --dim: #a3907a;
+  --accent: #e8a65d;
+  --admin: #8ed0c0;
+  --glow: color-mix(in srgb, #e8a65d 40%, transparent);
+  --radius: 4px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-dim: var(--dim);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-energia: var(--energia);
+  --color-admin: var(--admin);
+  --color-coraza: var(--coraza);
+  --color-danger: var(--danger);
+  --color-calidez: var(--calidez);
+  --color-frialdad: var(--frialdad);
+  --color-confianza: var(--confianza);
+  --color-fantasmas: var(--fantasmas);
+  --color-comun: var(--comun);
+  --color-raro: var(--raro);
+  --color-epico: var(--epico);
+  --color-singular: var(--singular);
+  --radius-ui: var(--radius);
+}
+
+@theme {
+  --font-pixel: 'Press Start 2P', ui-monospace, monospace;
+  --font-term: 'VT323', ui-monospace, monospace;
+  --font-read: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+/* ─── Base ─────────────────────────────────────────────────────────────── */
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-read);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.app-shell {
+  background: var(--bg);
+  color: var(--fg);
+  letter-spacing: var(--tracking);
+  transition:
+    background-color 1.2s ease,
+    color 1.2s ease;
+}
+
+/* Interacción rápida; el cambio de clima (acto / estado anímico) se funde lento en las superficies grandes. */
+.app-shell * {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.18s;
+}
+
+.app-shell .panel,
+.app-shell header,
+.app-shell aside {
+  transition-duration: 1.1s;
+}
+
+[data-mood='frio'] .app-shell *,
+[data-mood='frio'].app-shell * {
+  transition-duration: 0s;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Clases de componente en su capa: las utilidades de Tailwind pueden sobrescribirlas. */
+@layer components {
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .label {
+    font-family: var(--font-term);
+    font-size: 16px;
+    line-height: 1.15;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .term {
+    font-family: var(--font-term);
+    font-size: 20px;
+    line-height: 1.1;
+  }
+}
+
+/* Scrollbars discretos */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* ─── CRT sutil ────────────────────────────────────────────────────────── */
+
+.crt-layer {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+.crt-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.16) 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+.crt-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.45) 100%);
+  animation: crt-flicker 6s infinite steps(1);
+}
+
+@keyframes crt-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  48% {
+    opacity: 0.94;
+  }
+  49% {
+    opacity: 1;
+  }
+}
+
+/* ─── Animaciones de feedback ──────────────────────────────────────────── */
+
+@keyframes delta-up {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent);
+  }
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.flash {
+  animation: delta-up 0.9s ease-out;
+}
+
+@keyframes delta-fade {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.delta-fade {
+  animation: delta-fade 1.8s ease-out forwards;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.caret::after {
+  content: '▌';
+  margin-left: 2px;
+  color: var(--accent);
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.pulse-soft {
+  animation: pulse-soft 3.2s ease-in-out infinite;
+}
+
+@keyframes glitch-x {
+  0% {
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+  20% {
+    transform: translateX(-3px);
+    clip-path: inset(20% 0 50% 0);
+  }
+  40% {
+    transform: translateX(3px);
+    clip-path: inset(60% 0 10% 0);
+  }
+  60% {
+    transform: translateX(-1px);
+    clip-path: inset(5% 0 80% 0);
+  }
+  100% {
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.glitch {
+  animation: glitch-x 0.35s steps(2) 2;
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast-in {
+  animation: toast-in 0.25s ease-out;
+}
+
+.choice {
+  border-radius: var(--radius);
+}
+
+[data-mood='calido'] .choice:not(:disabled):hover {
+  box-shadow: 0 0 18px -6px var(--glow);
+}
+
+[data-mood='frio'] .choice {
+  border-width: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-layer::after,
+  .pulse-soft,
+  .glitch,
+  .flash,
+  .delta-fade,
+  .toast-in {
+    animation: none !important;
+  }
+  .app-shell,
+  .app-shell * {
+    transition: none !important;
+  }
+}
