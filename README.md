@@ -16,6 +16,13 @@ npm run lint       # oxlint
 
 `/?galeria` abre una galería con todos los decorados pixel-art en sus tres estados anímicos (útil para trabajar el arte sin jugar).
 
+## Publicación
+
+Cada push a `main` corre lint, pruebas y build, y publica el juego en GitHub Pages:
+**https://limerence69x.github.io/Juegovida/** (workflow en [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)).
+
+Requisito único: en *Settings → Pages → Build and deployment*, elegir **Source: GitHub Actions**. El sitio de Pages es público aunque el repositorio sea privado.
+
 ## Arquitectura
 
 ```
