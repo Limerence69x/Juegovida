@@ -36,6 +36,7 @@ export type Effect =
   | { kind: 'item'; id: ItemId; qty?: number }
   | { kind: 'drop'; table: DropTableId }
   | { kind: 'coraza'; active: boolean }
+  | { kind: 'lector'; active: boolean }
   | { kind: 'dia'; delta: number; set?: never }
   | { kind: 'dia'; set: number; delta?: never }
   | { kind: 'log'; text: string; tone?: 'sistema' | 'consciencia' | 'vinculo' | 'alerta' | 'legacy' }
@@ -67,6 +68,8 @@ export interface Choice {
   cost?: { energia?: number; permisos?: number }
   /** Activa la Coraza de Distancia al elegirla. */
   coraza?: boolean
+  /** Lo que esta respuesta protege o arriesga en ti; se lee al inspeccionar el código. */
+  subtext?: string
   effects: Effect[]
   /** `nodeId` en la misma escena, `@sceneId` para saltar de escena, `#FIN` para evaluar el final. */
   next: string
@@ -125,6 +128,11 @@ export type SceneArt =
   | 'campamento'
   | 'auto'
   | 'algoritmo'
+  | 'restaurante'
+  | 'llamada'
+  | 'pasillo'
+  | 'aula'
+  | 'despacho'
 
 export type Entorno = 'burocratico' | 'hogar' | 'legacy' | 'montana' | 'transito' | 'interior'
 

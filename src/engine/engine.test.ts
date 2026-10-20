@@ -7,14 +7,22 @@ import {
   choose,
   getChoiceViews,
   hijaRegistrando,
+  inspectNode,
+  LECTOR_OSCURO,
+  LECTOR_VINCULO,
   linearTarget,
+  normalizeState,
+  readCode,
   startGame,
   toggleCoraza,
+  toggleLector,
   consumeItem,
 } from './engine'
 import { nextRandom } from './rng'
 import { currentNode } from './registry'
 import { validateContent } from './validate'
+import { choiceInsight } from './insight'
+import { passiveReport, quickAnchors } from './anchors'
 
 const NOMBRES = { hija: 'Emilia', pareja: 'Dani' }
 
@@ -24,7 +32,7 @@ function at(state: GameState, sceneId: string, nodeId?: string): GameState {
     phase: 'playing',
     act: SCENES[sceneId].act,
     position: { sceneId, nodeId: nodeId ?? SCENES[sceneId].start },
-    sceneMemo: { permisosGastados: 0, avisoHija: false },
+    sceneMemo: { permisosGastados: 0, avisoHija: false, inspeccionados: [] },
   }
 }
 
@@ -196,5 +204,99 @@ describe('recorridos completos', () => {
   it('jugar con presencia auténtica obtiene permisos de administrador', () => {
     const { state } = playthrough(7, 'authentic')
     expect(state.endingId).toBe('administrador')
+  })
+})
+
+describe('ingeniería inversa', () => {
+  it('sin permisos suficientes el código no se puede inspeccionar', () => {
+    const s = at(fresh(), 'a1_oficina', 'o2')
+    const r = readCode(s)
+    expect(r.available).toBe(true)
+    expect(r.revealed).toBe(false)
+    expect(r.locked).toMatch(/permisos/)
+    expect(inspectNode(s).state).toBe(s)
+  })
+
+  it('inspeccionar cuesta batería, revela etiquetas y no se cobra dos veces', () => {
+    const s = at(fresh(), 'a1_oficina', 'o2')
+    s.stats.permisosAdmin = 40
+    const { state } = inspectNode(s)
+    expect(state.stats.energiaMental).toBe(s.stats.energiaMental - 3)
+    const r = readCode(state)
+    expect(r.revealed).toBe(true)
+    expect(r.visible.map((t) => t.kind)).toEqual(['DEFENSA', 'MIEDO'])
+    expect(inspectNode(state).state).toBe(state)
+  })
+
+  it('la inspección vale sólo para el nodo inspeccionado', () => {
+    let s = at(fresh(), 'a1_reunion', 'r2')
+    s.stats.permisosAdmin = 40
+    s = inspectNode(s).state
+    s = advance(s).state
+    expect(s.position.nodeId).toBe('r3')
+    expect(readCode(s).revealed).toBe(false)
+  })
+
+  it('el subtexto de las opciones muestra el diff sólo con permisos altos', () => {
+    const s = at(fresh(), 'a1_reunion', 'r3')
+    const choice = SCENES.a1_reunion.nodes.r3.choices![0]
+    expect(choiceInsight(s, choice).diff).toBeNull()
+    s.stats.permisosAdmin = 60
+    const diff = choiceInsight(s, choice).diff!
+    expect(diff).toContainEqual({ key: 'automatismo', dir: 1 })
+    expect(choiceInsight(s, choice).subtext).toMatch(/GUION PRECARGADO/)
+  })
+
+  it('el Lector encendido revela gratis pero enfría el vínculo', () => {
+    const base = at(fresh(), 'a3_pareja', 'p2')
+    base.flags.visionDefensas = true
+    const off = { ...base, lectorActivo: false }
+    const on = { ...base, lectorActivo: true }
+    expect(readCode(on).revealed).toBe(true)
+    expect(readCode(on).cost).toBe(3) // el costo sólo aplica a la inspección manual
+    const a = choose(off, 'cansado').state
+    const b = choose(on, 'cansado').state
+    expect(b.stats.ladoOscuro - a.stats.ladoOscuro).toBe(LECTOR_OSCURO)
+    expect(b.pareja.fantasmasInestabilidad - a.pareja.fantasmasInestabilidad).toBe(LECTOR_VINCULO)
+    expect(toggleLector(on).state.lectorActivo).toBe(false)
+  })
+
+  it('en el trabajo, leer con el Lector no cuesta nada', () => {
+    const base = at(fresh(), 'a3_oficina', 'o1')
+    base.flags.visionDefensas = true
+    const a = choose({ ...base, lectorActivo: false }, 'tecnico').state
+    const b = choose({ ...base, lectorActivo: true }, 'tecnico').state
+    expect(b.stats.ladoOscuro).toBe(a.stats.ladoOscuro)
+  })
+
+  it('el Lector no existe antes del Acto 3', () => {
+    const s = at(fresh(), 'a1_oficina', 'o2')
+    expect(toggleLector(s).state.lectorActivo).toBe(false)
+  })
+})
+
+describe('anclas', () => {
+  it('sugiere un decant cuando hay ansiedad antes de decidir', () => {
+    const s = at(fresh(), 'a1_oficina', 'o2')
+    s.statuses.push({ id: 'ansiedad' })
+    s.inventory.decant_vetiver = 1
+    expect(quickAnchors(s).map((q) => q.id)).toContain('decant_vetiver')
+  })
+
+  it('el reloj sólo trabaja en escenas con presión de tiempo', () => {
+    const s = at(fresh(), 'a1_oficina', 'o2')
+    s.equipped.muneca = 'reloj_automatico'
+    expect(passiveReport(s).find((p) => p.id === 'reloj_automatico')?.active).toBe(true)
+    const casa = at(s, 'a1_casa', 'h1')
+    expect(passiveReport(casa).find((p) => p.id === 'reloj_automatico')?.active).toBe(false)
+  })
+
+  it('las partidas guardadas antes del Lector se completan al cargar', () => {
+    const viejo = fresh() as unknown as Record<string, unknown>
+    delete viejo.lectorActivo
+    viejo.sceneMemo = { permisosGastados: 0, avisoHija: false }
+    const g = normalizeState(viejo as unknown as GameState)
+    expect(g.lectorActivo).toBe(false)
+    expect(g.sceneMemo.inspeccionados).toEqual([])
   })
 })

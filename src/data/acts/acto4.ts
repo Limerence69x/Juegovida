@@ -47,7 +47,7 @@ const a4_sendero: Scene = {
   day: 'Domingo',
   art: 'sendero',
   entorno: 'montana',
-  onEnter: [dia(4)],
+  onEnter: [dia(1)],
   start: 's1',
   nodes: {
     s1: {

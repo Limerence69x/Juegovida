@@ -74,11 +74,13 @@ export interface GameState {
   inventory: Partial<Record<ItemId, number>>
   equipped: Equipment
   corazaActiva: boolean
+  /** Lector de Defensas (Acto 3+): muestra el subtexto de todos, a costa de mirarlos como casos. */
+  lectorActivo: boolean
   flags: Record<string, boolean>
   counters: Record<string, number>
   position: { sceneId: string; nodeId: string }
   /** Memoria de la escena en curso: se reinicia en cada cambio de escena. */
-  sceneMemo: { permisosGastados: number; avisoHija: boolean }
+  sceneMemo: { permisosGastados: number; avisoHija: boolean; inspeccionados: string[] }
   log: LogEntry[]
   phase: Phase
   act: number

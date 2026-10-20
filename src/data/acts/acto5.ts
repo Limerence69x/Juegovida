@@ -70,6 +70,12 @@ const a5_examen: Scene = {
         'Pones las manos en el volante. Diez y diez, como te enseñaron. Te transpiran.',
         'Hay algo extraño: en el tablero, donde debería estar la radio, una pantalla pequeña muestra un cursor parpadeando. Nadie más parece verla.',
       ),
+      extras: [
+        {
+          if: has('acompanaStent'),
+          text: 'Esta mañana estuviste en la sala de recuperación mientras a tu padre le ponían el stent. Al despedirse te dijo: «Anda, que vas a llegar tarde al examen.» Nunca le contaste que tenías examen. Lo sabía igual.',
+        },
+      ],
       next: 'x2',
     },
     x2: {

@@ -10,6 +10,10 @@ const SECCIONES: [string, string][] = [
     'AUTOMATISMO sube cuando respondes en piloto automático; en 100 el sistema bloquea tus opciones auténticas y elige por ti. PERMISOS ADMIN sube al cuestionar el guion: desbloquea opciones ocultas y etiquetas de código fuente (miedos, defensas, historias). ENERGÍA MENTAL se gasta al sostener presencia real; los vínculos genuinos la recargan. LADO OSCURO crece con la coraza y la intelectualización.',
   ],
   [
+    'Ingeniería inversa',
+    'Con permisos ≥ 15, el botón «Inspeccionar código» (o la tecla I) revela por 3 de energía el subtexto de quien habla: su miedo, su defensa, su historia. También muestra qué protege cada una de tus respuestas y, con permisos ≥ 45, qué variables mueve. Desde el Acto 3 tienes además el Lector de Defensas: lo ve todo gratis y con +15 de lectura. En el trabajo no cuesta nada; frente a tu hija, tu pareja o tu familia, cada decisión con el Lector encendido suma lado oscuro y enfría el vínculo. Puedes apagarlo.',
+  ],
+  [
     'Coraza de distancia',
     'En momentos de alta presión puedes activarla (panel Sistema): dejas de gastar energía y de sufrir estrés, pero cada decisión suma lado oscuro y enfría a tu hija y a tu pareja. Quitártela cuesta energía. Se cae sola al dormir, entre actos.',
   ],
@@ -25,7 +29,7 @@ const SECCIONES: [string, string][] = [
     'Etiquetas en las opciones',
     'ENERGÍA −N: cuesta batería. ADMIN ≥ N: exige consciencia. GASTA PERMISOS: consume consciencia (clave con tu familia). ACTIVA CORAZA: entra en Protocolo Legacy. SALTO DE FE / IMPULSO DE REGRESIÓN / PRESENCIA / INTELECTUALIZACIÓN describen el subtexto. Con permisos ≥ 30 verás cuál es el GUION PRECARGADO.',
   ],
-  ['Controles', 'Teclas 1–9 para elegir. Enter o Espacio para completar el texto o continuar. La partida se guarda sola en este navegador.'],
+  ['Controles', 'Teclas 1–9 para elegir. Enter o Espacio para completar el texto o continuar. I para inspeccionar el código. La partida se guarda sola en este navegador.'],
 ]
 
 export function HelpModal({ onClose }: { onClose: () => void }) {

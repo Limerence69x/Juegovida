@@ -22,6 +22,7 @@ export const give = (id: ItemId, qty = 1): Effect => ({ kind: 'item', id, qty })
 export const drop = (table: DropTableId): Effect => ({ kind: 'drop', table })
 export const dia = (delta: number): Effect => ({ kind: 'dia', delta })
 export const diaReset = (): Effect => ({ kind: 'dia', set: 0 })
+export const lector = (active: boolean): Effect => ({ kind: 'lector', active })
 export const log = (text: string, tone: Extract<Effect, { kind: 'log' }>['tone'] = 'consciencia'): Effect => ({
   kind: 'log',
   text,

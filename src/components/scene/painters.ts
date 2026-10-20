@@ -539,6 +539,177 @@ const algoritmo: Painter = (g) => {
   g.alpha(0.18, () => g.rect(0, scan, W, 2, P.green))
 }
 
+
+const restaurante: Painter = (g) => {
+  g.rect(0, 0, W, 66, '#7a3f2e')
+  g.rect(0, 46, W, 20, '#6a3526')
+  // ventana a la calle de noche, con autos que pasan
+  g.rect(96, 8, 56, 34, '#121a2c')
+  for (let i = 0; i < 3; i++) {
+    const x = ((i * 70 + g.t * 30) % 140) + 60
+    if (x > 96 && x < 148) g.rect(x, 34, 4, 1, i % 2 ? '#ff5a4a' : '#fff1c8')
+  }
+  g.rect(94, 6, 60, 2, '#3e1f16')
+  g.rect(94, 42, 60, 2, '#3e1f16')
+  g.rect(123, 8, 1, 34, '#3e1f16')
+  // guirnalda de ampolletas
+  for (let x = 4; x < 92; x += 8) {
+    const y = 6 + Math.round(Math.sin(x / 14) * 3)
+    const on = (Math.floor(g.t * 2) + x) % 5 !== 0
+    g.rect(x, y, 2, 2, on ? '#ffd38a' : '#8a6a3a')
+  }
+  // cuadros
+  g.rect(14, 18, 16, 12, '#c2b04a')
+  g.rect(16, 20, 12, 8, '#4f6d8f')
+  g.rect(40, 16, 12, 16, '#d9d4c3')
+  g.rect(42, 18, 8, 12, '#8f4f4f')
+  // mesa para dos
+  g.rect(40, 60, 80, 4, '#d9d4c3')
+  g.rect(78, 64, 4, 16, P.wood2)
+  g.person(100, 42, { body: '#5a6b8a', hair: P.hair, sitting: true })
+  g.rect(52, 50, 10, 10, '#3a2b24')
+  // dos pisco sour: uno con espuma, otro sin
+  g.rect(70, 54, 4, 6, '#e8e2a0')
+  g.rect(70, 53, 4, 1, '#ffffff')
+  g.rect(88, 54, 4, 6, '#d8d290')
+  // velas
+  for (const x of [62, 96]) {
+    g.rect(x, 56, 2, 4, '#efe6d0')
+    const h = 1 + Math.round(Math.abs(Math.sin(g.t * 7 + x)) * 2)
+    g.rect(x, 56 - h, 2, h, '#ffb347')
+  }
+  g.alpha(0.12, () => g.disc(80, 56, 20, '#ffd38a'))
+  g.rect(0, 80, W, 10, '#3a2418')
+}
+
+const llamada: Painter = (g) => {
+  g.rect(0, 0, W, H, '#151820')
+  // ventana con la ciudad
+  g.rect(16, 10, 50, 36, '#0c1020')
+  const rnd = seeded(31)
+  for (let i = 0; i < 24; i++) g.px(18 + rnd() * 46, 26 + rnd() * 18, rnd() > 0.7 ? '#ffd38a' : '#7a8aa8')
+  g.rect(14, 8, 54, 2, '#262a36')
+  g.rect(14, 46, 54, 2, '#262a36')
+  // refrigerador y mesón
+  g.rect(124, 14, 26, 66, '#3a3e48')
+  g.rect(126, 40, 22, 1, '#2a2e36')
+  g.rect(70, 60, 54, 4, '#4a4e58')
+  g.rect(70, 64, 54, 26, '#2a2d34')
+  // tú, de pie, con el celular al oído
+  g.person(86, 34, { body: '#3a4450', hair: P.hair2, armUp: true })
+  g.alpha(0.5 + Math.sin(g.t * 3) * 0.2, () => g.rect(92, 32, 3, 4, '#6fc7d8'))
+  // la otra línea: una ventana de estática
+  g.rect(100, 6, 20, 14, '#0a0a0a')
+  const st = seeded(Math.floor(g.t * 14))
+  for (let i = 0; i < 90; i++) g.px(101 + st() * 18, 7 + st() * 12, st() > 0.5 ? '#cfcfcf' : '#3a3a3a')
+  // onda de voz entrecortada
+  for (let x = 0; x < W; x += 2) {
+    const amp = Math.sin(x / 6 + g.t * 5) * Math.sin(g.t * 1.3 + x / 40) * 3
+    g.alpha(0.35, () => g.px(x, 84 + amp, '#9fb8c8'))
+  }
+  const ns = seeded(Math.floor(g.t * 10) + 7)
+  for (let i = 0; i < 160; i++) g.alpha(0.25, () => g.px(ns() * W, ns() * H, ns() > 0.5 ? '#bfbfbf' : '#202020'))
+}
+
+const pasillo: Painter = (g) => {
+  // perspectiva de un pasillo largo hacia una puerta de escalera
+  g.rect(0, 0, W, H, '#cfc7ae')
+  for (let y = 0; y < H; y++) {
+    const k = Math.abs(y - 40) / 50
+    const half = 14 + k * 70
+    g.rect(80 - half, y, half * 2, 1, y < 40 ? '#e2dbc6' : '#8a8a78')
+  }
+  // azulejo verde en la mitad baja de los muros
+  for (let y = 46; y < H; y++) {
+    const half = 14 + ((y - 40) / 50) * 70
+    g.rect(0, y, 80 - half, 1, '#6f9a86')
+    g.rect(80 + half, y, 80 - half, 1, '#6f9a86')
+  }
+  // puerta del fondo y letrero de salida
+  g.rect(72, 26, 16, 22, '#5c656b')
+  g.rect(74, 20, 12, 4, '#2f9a5a')
+  g.rect(76, 21, 8, 2, '#d8f2e0')
+  // tubos fluorescentes, uno fallando
+  for (let i = 0; i < 4; i++) {
+    const w = 8 + i * 8
+    const y = 10 - i * 3
+    const falla = i === 2 && Math.floor(g.t * 8) % 7 === 0
+    g.rect(80 - w / 2, y + 6, w, 1, falla ? '#9a9a8a' : '#fbfbf2')
+  }
+  // cajas apiladas y una camilla
+  ;[[10, 70, 18, 12], [14, 60, 14, 10], [130, 72, 22, 10], [134, 64, 16, 8]].forEach(([x, y, w, h]) => {
+    g.rect(x, y, w, h, '#b08a5a')
+    g.rect(x, y + Math.floor(h / 2), w, 1, '#8a6a3a')
+  })
+  g.rect(40, 66, 24, 4, '#e8ecea')
+  g.rect(42, 70, 2, 8, P.metal2)
+  g.rect(60, 70, 2, 8, P.metal2)
+  g.person(104, 50, { body: '#7fb6c9', hair: P.hair })
+  g.person(92, 54, { body: '#d8b25a', hair: '#9a9a9a' })
+}
+
+const aula: Painter = (g) => {
+  g.rect(0, 0, W, 60, '#d6d2c4')
+  g.rect(0, 60, W, 30, '#7a6a58')
+  // pizarra con el caso
+  g.rect(30, 8, 100, 30, '#f1f2ee')
+  g.rect(30, 38, 100, 2, '#9a9a90')
+  g.rect(36, 12, 24, 3, '#2a3a5a')
+  for (let i = 0; i < 5; i++) g.rect(36, 19 + i * 3, 30 + ((i * 13) % 40), 1, '#5a6a8a')
+  g.line(96, 14, 120, 30, '#a55a4a')
+  g.ring(110, 22, 6, '#a55a4a')
+  // ventana con luz de mañana
+  g.rect(138, 8, 18, 40, '#bcd6ea')
+  g.alpha(0.2, () => g.rect(100, 40, 60, 30, '#fff6d8'))
+  // profesora frente a la pizarra
+  g.person(18, 30, { body: '#5a4a6a', hair: '#8a8a8a' })
+  // filas de sillas universitarias, de espaldas
+  for (let row = 0; row < 2; row++) {
+    for (let i = 0; i < 6; i++) {
+      const x = 12 + i * 24 + row * 6
+      const y = 56 + row * 14
+      g.rect(x, y + 6, 16, 3, '#4a4a52')
+      g.rect(x + 12, y + 2, 6, 2, '#c2b49a')
+      const colors = ['#4f6d8f', '#8f4f4f', '#5f8f6f', '#c2b04a', '#6b6b80', '#8a6fa8']
+      if ((i + row) % 3 !== 2) g.person(x + 4, y - 8, { body: colors[(i + row * 2) % 6], hair: i % 2 ? P.hair : P.hair2, sitting: true })
+    }
+  }
+}
+
+const despacho: Painter = (g) => {
+  g.rect(0, 0, W, H, '#5a4a3e')
+  // estantes hasta el techo
+  for (let shelf = 0; shelf < 5; shelf++) {
+    const y = 6 + shelf * 13
+    g.rect(4, y + 11, 64, 2, P.wood2)
+    const rnd = seeded(shelf + 40)
+    let x = 6
+    while (x < 64) {
+      const w = 2 + Math.floor(rnd() * 3)
+      const h = 7 + Math.floor(rnd() * 4)
+      g.rect(x, y + 11 - h, w, h, ['#8f4f4f', '#4f6d8f', '#c2b04a', '#5f8f6f', '#d9d4c3', '#6b5e8a'][Math.floor(rnd() * 6)])
+      x += w + (rnd() > 0.8 ? 2 : 0)
+    }
+  }
+  // ventana con luz de tarde
+  g.bands(96, 10, 48, 34, ['#e8a070', '#f2c27b', '#f6dcae'])
+  g.rect(94, 8, 52, 2, '#3e3028')
+  g.rect(119, 10, 1, 34, '#3e3028')
+  g.alpha(0.18, () => g.rect(84, 44, 70, 40, '#f2c27b'))
+  // planta regada con disciplina
+  g.rect(144, 62, 10, 12, '#8a5a3a')
+  for (const [x, y] of [[146, 54], [150, 50], [143, 57], [152, 56], [148, 46]]) g.rect(x, y, 3, 5, '#5f8f48')
+  // dos sillas iguales frente a frente
+  g.rect(78, 66, 16, 4, '#2f3a44')
+  g.rect(78, 56, 3, 10, '#2f3a44')
+  g.rect(118, 66, 16, 4, '#2f3a44')
+  g.rect(131, 56, 3, 10, '#2f3a44')
+  g.person(84, 46, { body: '#46524c', hair: P.hair2, sitting: true })
+  g.person(122, 46, { body: '#6a5a7a', hair: '#9a9a9a', sitting: true })
+  g.rect(118, 58, 6, 2, P.paper)
+  g.rect(0, 80, W, 10, '#3e3028')
+}
+
 export const PAINTERS: Record<SceneArt, Painter> = {
   dormitorio,
   oficina,
@@ -556,4 +727,9 @@ export const PAINTERS: Record<SceneArt, Painter> = {
   campamento,
   auto,
   algoritmo,
+  restaurante,
+  llamada,
+  pasillo,
+  aula,
+  despacho,
 }

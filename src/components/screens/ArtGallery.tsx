@@ -23,6 +23,11 @@ const ART_ACT: Record<SceneArt, number> = {
   campamento: 4,
   auto: 5,
   algoritmo: 5,
+  restaurante: 2,
+  llamada: 2,
+  pasillo: 2,
+  aula: 3,
+  despacho: 3,
 }
 
 export function ArtGallery() {

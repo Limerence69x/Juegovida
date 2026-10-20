@@ -1,6 +1,6 @@
 import type { Condition, EndingDef } from '../types/content'
 import type { EndingId } from '../types/game'
-import { all, has, hasNot, not, txt } from './dsl'
+import { all, any, has, hasNot, not, txt } from './dsl'
 
 const aprobado: Condition = { counter: 'maniobras', gte: 2 }
 const reprobado: Condition = { counter: 'maniobras', lte: 1 }
@@ -23,6 +23,10 @@ export const ENDINGS: Record<EndingId, EndingDef> = {
       { if: has('cartaHija'), text: 'La carta de la montaña sigue en tu libreta. Se la vas a dar cuando cumpla quince. O antes, si un día te ve frío y no sabe por qué.' },
       { if: has('promesaMontana'), text: 'En el calendario de la cocina, en febrero, hay una fecha marcada con su letra: «MONTAÑA CON PAPÁ».' },
       { if: has('pausaPareja'), text: 'Con {pareja} volvieron a hablar. El contador partió de nuevo desde el día uno. Esta vez no lo estás mirando.' },
+      {
+        if: any(has('preguntoMiedoPadre'), has('acompanaStent')),
+        text: 'Tu padre salió del hospital con un stent y una costumbre nueva: te llama los domingos. Hablan del tiempo, del precio de la bencina. Pero llama.',
+      },
     ],
   },
   coraza: {
@@ -72,6 +76,10 @@ export const ENDINGS: Record<EndingId, EndingDef> = {
       { if: not(hijaCalida), text: '{hija} te mira a veces como mirabas tú a tu padre: esperando algo que no sabe nombrar. Todavía hay tiempo. No tanto como crees.' },
       { if: all(parejaFirme, hasNot('pausaPareja')), text: '{pareja} sigue ahí. Día a día, sin contar. Eso también es un permiso que alguien te dio.' },
       { if: not(parejaFirme), text: 'Con {pareja} las cosas están en pausa. Ni rotas ni enteras. Como todo, en modo seguro.' },
+      {
+        if: any(has('preguntoMiedoPadre'), has('acompanaStent')),
+        text: 'Tu padre te llama algunos domingos, desde que tiene el stent. No hablan de nada importante. Es un comienzo, y en tu familia los comienzos son raros.',
+      },
     ],
   },
 }

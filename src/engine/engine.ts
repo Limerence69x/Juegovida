@@ -21,6 +21,14 @@ export const VISION_DEFENSAS_BONUS = 15
 /** Respiro entre escenas del mismo acto. */
 export const REGEN_ENTRE_ESCENAS = 4
 export const GUION_VISIBLE_DESDE = 30
+/** Ingeniería inversa manual (Actos 1–2): mínimo de consciencia y costo de batería por nodo. */
+export const INSPECCION_MIN_PERMISOS = 15
+export const INSPECCION_COSTO = 3
+/** Ver el «diff» de una opción (qué variables mueve) exige leer bien el propio código. */
+export const DIFF_VISIBLE_DESDE = 45
+/** Costo pasivo del Lector encendido frente a tu hija, tu pareja o tu familia: mirarlos como casos. */
+export const LECTOR_OSCURO = 2
+export const LECTOR_VINCULO = 3
 const LOG_MAX = 200
 
 // ─── Tipos de salida ────────────────────────────────────────────────────────
@@ -78,10 +86,11 @@ export function createInitialState(nombres: GameState['nombres'], seed: number):
     inventory: { freq_reverb: 1 },
     equipped: { muneca: null, manos: ['anillo_liso'], cuello: null },
     corazaActiva: false,
+    lectorActivo: false,
     flags: {},
     counters: {},
     position: { sceneId: '', nodeId: '' },
-    sceneMemo: { permisosGastados: 0, avisoHija: false },
+    sceneMemo: { permisosGastados: 0, avisoHija: false, inspeccionados: [] },
     log: [],
     phase: 'boot',
     act: 0,
@@ -96,6 +105,20 @@ export function startGame(nombres: GameState['nombres'], seed: number): StepResu
   pushLog(ctx.s, 'sistema', 'Sistema iniciado. Usuario sin privilegios de administrador.')
   changeScene(ctx, getAct(1).firstScene)
   return { state: ctx.s, notices: ctx.notices, deltas: {} }
+}
+
+/** Completa campos que no existían en partidas guardadas con versiones anteriores. */
+export function normalizeState(g: GameState): GameState {
+  const memo: Partial<GameState['sceneMemo']> = g.sceneMemo ?? {}
+  return {
+    ...g,
+    lectorActivo: g.lectorActivo ?? Boolean(g.flags?.visionDefensas),
+    sceneMemo: {
+      permisosGastados: memo.permisosGastados ?? 0,
+      avisoHija: memo.avisoHija ?? false,
+      inspeccionados: memo.inspeccionados ?? [],
+    },
+  }
 }
 
 /** Cierra la tarjeta de acto y entrega el control al jugador. */
@@ -184,13 +207,42 @@ function findAdminMin(choice: Choice): number | undefined {
   return walk(choice.requires) ?? walk(choice.visibleIf)
 }
 
-export function visibleSourceTags(state: GameState, node: DialogueNode): { visible: SourceTag[]; hidden: SourceTag[] } {
-  const bonus = state.flags.visionDefensas ? VISION_DEFENSAS_BONUS : 0
+export interface CodeReading {
+  /** Hay algo que leer: etiquetas de un personaje o subtexto de opciones. */
+  available: boolean
+  /** Ya se ve (inspeccionado a mano o con el Lector encendido). */
+  revealed: boolean
+  mode: 'lector' | 'manual'
+  /** Batería que cuesta inspeccionar a mano. */
+  cost: number
+  /** Motivo por el que no se puede inspeccionar ahora. */
+  locked?: string
+  /** Lectura efectiva: permisos + bonus del Lector. */
+  lectura: number
+  visible: SourceTag[]
+  hidden: SourceTag[]
+}
+
+/** Qué del subtexto del nodo actual puede ver el jugador, y a qué precio. */
+export function readCode(state: GameState, node: DialogueNode = currentNode(state)): CodeReading {
   const tags = node.sourceTags ?? []
-  const lectura = state.stats.permisosAdmin + bonus
+  const lectura = state.stats.permisosAdmin + (state.lectorActivo ? VISION_DEFENSAS_BONUS : 0)
+  const available = tags.length > 0 || (node.choices?.length ?? 0) >= 2
+  const mode = state.lectorActivo ? 'lector' : 'manual'
+  const revealed = available && (state.lectorActivo || state.sceneMemo.inspeccionados.includes(state.position.nodeId))
+  const cost = state.corazaActiva ? 0 : INSPECCION_COSTO
+  let locked: string | undefined
+  if (state.stats.permisosAdmin < INSPECCION_MIN_PERMISOS) locked = `Requiere permisos ≥ ${INSPECCION_MIN_PERMISOS}`
+  else if (cost > state.stats.energiaMental) locked = 'Batería insuficiente'
   return {
-    visible: tags.filter((t) => lectura >= t.min),
-    hidden: tags.filter((t) => lectura < t.min),
+    available,
+    revealed,
+    mode,
+    cost,
+    locked,
+    lectura,
+    visible: revealed ? tags.filter((t) => lectura >= t.min) : [],
+    hidden: tags.filter((t) => !revealed || lectura < t.min),
   }
 }
 
@@ -199,6 +251,22 @@ export function hijaRegistrando(state: GameState): boolean {
   if (state.phase === 'boot') return false
   const rel = relationalOf(currentScene(state), currentNode(state))
   return rel.hija && (state.corazaActiva || state.stats.automatismo >= AUTOMATISMO_HIJA_UMBRAL)
+}
+
+/** El Lector cobra cuando lees a alguien de tu vida íntima; en el trabajo, leer es gratis. */
+export function lectorCobra(state: GameState): boolean {
+  if (state.phase === 'boot' || !state.lectorActivo) return false
+  const scene = currentScene(state)
+  const node = currentNode(state)
+  const rel = relationalOf(scene, node)
+  return Boolean(node.sourceTags?.length) && (rel.hija || rel.pareja || scene.relational === 'legacy')
+}
+
+/** Con el Lector encendido frente a ella, la hija nota que la miras como un caso. */
+export function hijaLeida(state: GameState): boolean {
+  if (state.phase === 'boot') return false
+  const node = currentNode(state)
+  return state.lectorActivo && relationalOf(currentScene(state), node).hija && Boolean(node.sourceTags?.length)
 }
 
 export function canActivateCoraza(state: GameState): boolean {
@@ -214,7 +282,9 @@ export function choose(state: GameState, choiceId: string): StepResult {
   const ctx: Ctx = { s: structuredClone(state), notices: [] }
   const { s } = ctx
   const scene = currentScene(s)
-  const rel = relationalOf(scene, currentNode(s))
+  const node = currentNode(s)
+  const rel = relationalOf(scene, node)
+  const leyendo = lectorCobra(s)
   const before = snapshotVars(s)
   const { choice } = view
 
@@ -226,7 +296,7 @@ export function choose(state: GameState, choiceId: string): StepResult {
   if (choice.coraza && !s.corazaActiva) activateCoraza(ctx)
 
   applyEffects(ctx, choice.effects, 'choice', rel)
-  applyPassives(ctx, rel)
+  applyPassives(ctx, rel, leyendo)
   s.decisions += 1
 
   const summary = formatDeltas(diffVars(before, s))
@@ -291,6 +361,40 @@ export function unequipItem(state: GameState, id: ItemId): StepResult {
   s.equipped.manos = s.equipped.manos.filter((m) => m !== id)
   addToInventory(s, id)
   pushLog(s, 'loot', `Guardaste ${ITEMS[id].name}.`)
+  return { state: s, notices: [], deltas: {} }
+}
+
+/** Ingeniería inversa manual: revela el subtexto del nodo actual a cambio de batería. */
+export function inspectNode(state: GameState): StepResult {
+  const reading = readCode(state)
+  if (state.phase !== 'playing' || !reading.available || reading.revealed || reading.locked)
+    return { state, notices: [], deltas: {} }
+  const ctx: Ctx = { s: structuredClone(state), notices: [] }
+  const { s } = ctx
+  const before = snapshotVars(s)
+  const node = currentNode(s)
+  setVar(s, 'energiaMental', s.stats.energiaMental - reading.cost)
+  // Analizar con la coraza puesta no cansa: enfría.
+  if (s.corazaActiva) setVar(s, 'ladoOscuro', s.stats.ladoOscuro + 1)
+  s.sceneMemo.inspeccionados.push(s.position.nodeId)
+  const quien = node.speaker ? interpolate(node.speaker, s).split(' · ')[0] : 'la escena'
+  const leidas = readCode(s).visible.length
+  pushLog(s, 'consciencia', `⌕ Inspeccionaste el código de ${quien}${leidas ? `: ${leidas} etiqueta(s) legible(s)` : ''}.`)
+  return { state: s, notices: ctx.notices, deltas: diffVars(before, s) }
+}
+
+/** Encender o apagar el Lector de Defensas (disponible desde el Acto 3). Es gratis; lo caro es dejarlo encendido. */
+export function toggleLector(state: GameState): StepResult {
+  if (state.phase !== 'playing' || !state.flags.visionDefensas) return { state, notices: [], deltas: {} }
+  const s = structuredClone(state)
+  s.lectorActivo = !s.lectorActivo
+  pushLog(
+    s,
+    'consciencia',
+    s.lectorActivo
+      ? 'Lector de Defensas encendido. Vuelves a ver los subtítulos de todos.'
+      : 'Lector de Defensas apagado. Las personas vuelven a ser personas, no casos. Ves menos.',
+  )
   return { state: s, notices: [], deltas: {} }
 }
 
@@ -373,6 +477,12 @@ function applyEffects(ctx: Ctx, effects: Effect[], source: 'choice' | 'item' | '
         if (e.active && !s.corazaActiva) activateCoraza(ctx)
         else if (!e.active) s.corazaActiva = false
         break
+      case 'lector':
+        if (s.lectorActivo !== e.active) {
+          s.lectorActivo = e.active
+          pushLog(s, 'consciencia', e.active ? 'Lector de Defensas en línea.' : 'Lector de Defensas apagado.')
+        }
+        break
       case 'dia':
         s.pareja.diaEstabilidad = e.set ?? s.pareja.diaEstabilidad + e.delta
         break
@@ -386,8 +496,13 @@ function applyEffects(ctx: Ctx, effects: Effect[], source: 'choice' | 'item' | '
 }
 
 /** Costos y efectos que no dependen de la opción sino del estado en que la elegiste. */
-function applyPassives(ctx: Ctx, rel: RelationalTarget) {
+function applyPassives(ctx: Ctx, rel: RelationalTarget, leyendo: boolean) {
   const { s } = ctx
+  if (leyendo) {
+    setVar(s, 'ladoOscuro', s.stats.ladoOscuro + LECTOR_OSCURO)
+    if (rel.hija) setVar(s, 'frialdadHeredada', s.hija.frialdadHeredada + LECTOR_VINCULO)
+    if (rel.pareja) setVar(s, 'fantasmasInestabilidad', s.pareja.fantasmasInestabilidad + LECTOR_VINCULO)
+  }
   if (s.corazaActiva) {
     setVar(s, 'ladoOscuro', s.stats.ladoOscuro + 3)
     if (rel.hija) setVar(s, 'frialdadHeredada', s.hija.frialdadHeredada + (ownsItem(s, 'dibujo_hija') ? 2 : 4))
@@ -486,7 +601,7 @@ function changeScene(ctx: Ctx, sceneId: string) {
   if (s.position.sceneId) exitScene(ctx)
   const scene = getScene(sceneId)
   s.position = { sceneId, nodeId: scene.start }
-  s.sceneMemo = { permisosGastados: 0, avisoHija: false }
+  s.sceneMemo = { permisosGastados: 0, avisoHija: false, inspeccionados: [] }
   if (scene.act !== s.act) {
     s.act = scene.act
     s.phase = 'actIntro'

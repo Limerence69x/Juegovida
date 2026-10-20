@@ -1,4 +1,6 @@
 import type { BadgeId, ChoiceView } from '../engine/engine'
+import type { ChoiceInsight } from '../engine/insight'
+import { VAR_LABEL } from '../engine/vars'
 
 const BADGE_STYLE: Record<BadgeId, string> = {
   energia: 'border-energia/60 text-energia',
@@ -21,10 +23,12 @@ interface Props {
   index: number
   text: string
   lockReason?: string
+  /** Subtexto revelado por la ingeniería inversa. */
+  insight?: ChoiceInsight
   onChoose: () => void
 }
 
-export function ChoiceButton({ view, index, text, lockReason, onChoose }: Props) {
+export function ChoiceButton({ view, index, text, lockReason, insight, onChoose }: Props) {
   const { locked, badges } = view
   return (
     <button
@@ -49,6 +53,20 @@ export function ChoiceButton({ view, index, text, lockReason, onChoose }: Props)
                 </span>
               ))}
               {lockReason && <span className="term px-1 text-[15px] leading-5 text-danger/90">⊘ {lockReason}</span>}
+            </div>
+          )}
+          {insight && (
+            <div className="toast-in space-y-1 border-l-2 border-admin/50 pl-2">
+              <p className="term text-[16px] leading-tight text-admin/90">⌕ {insight.subtext}</p>
+              {insight.diff && insight.diff.length > 0 && (
+                <p className="term flex flex-wrap gap-x-2.5 text-[15px] leading-tight text-dim" aria-label="Variables que mueve">
+                  {insight.diff.map((d) => (
+                    <span key={d.key}>
+                      {d.dir > 0 ? '▲' : '▼'} {VAR_LABEL[d.key]}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
           )}
         </div>

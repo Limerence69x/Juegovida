@@ -35,6 +35,9 @@ interface GameStore {
   equip: (id: ItemId) => void
   unequip: (id: ItemId) => void
   toggleCoraza: () => void
+  /** Ingeniería inversa del nodo actual (gasta batería). */
+  inspect: () => void
+  toggleLector: () => void
   reset: () => void
   dismissToast: (id: number) => void
   setSettings: (patch: Partial<Settings>) => void
@@ -100,6 +103,8 @@ export const useGame = create<GameStore>()(
         equip: (id) => withGame((g) => engine.equipItem(g, id)),
         unequip: (id) => withGame((g) => engine.unequipItem(g, id)),
         toggleCoraza: () => withGame((g) => engine.toggleCoraza(g)),
+        inspect: () => withGame((g) => engine.inspectNode(g)),
+        toggleLector: () => withGame((g) => engine.toggleLector(g)),
         reset: () => set({ game: null, toasts: [], lastDeltas: { id: 0, deltas: {} }, atTitle: true }),
         dismissToast: (id) => set({ toasts: get().toasts.filter((t) => t.id !== id) }),
         setSettings: (patch) => set({ settings: { ...get().settings, ...patch } }),
@@ -107,16 +112,17 @@ export const useGame = create<GameStore>()(
     },
     {
       name: 'codigo-propio:save',
-      version: 1,
+      // v2: Lector de Defensas e inspección por nodo. Las partidas v1 se completan en `merge`.
+      version: 2,
       storage: createJSONStorage(() => safeStorage),
       partialize: (s) => ({ game: s.game, settings: s.settings }),
       // Una partida guardada que apunta a contenido que ya no existe se descarta.
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<GameStore>
         const valid = p.game && SCENES[p.game.position.sceneId]?.nodes[p.game.position.nodeId]
-        return { ...current, settings: { ...current.settings, ...p.settings }, game: valid ? p.game! : null }
+        return { ...current, settings: { ...current.settings, ...p.settings }, game: valid ? engine.normalizeState(p.game!) : null }
       },
-      migrate: () => ({ game: null }),
+      migrate: (persisted, version) => (version === 1 ? persisted : { game: null }) as Partial<GameStore>,
     },
   ),
 )
